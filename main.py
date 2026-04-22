@@ -222,7 +222,6 @@ async def logger_loop_mav():
             "lon": lon,
             "dest": dest,
             "vehicleModel": v.get("vehicleModel"),
-            "speed": v.get("speed"),
             "uicCode": v.get("uicCode"),
             "tripShortName": v.get("tripShortName"),
             "mode": v.get("mode"),
@@ -262,7 +261,6 @@ async def dkvtroli(ctx):
         vonal = v.get("route_id", "—")
         cel = v.get("Destination", "Ismeretlen")
         megallo = v.get("StopAreaName", "Ismeretlen")
-        speed = v.get("speed_kmh", 0)
 
         delay_sec = v.get("delay_sec")
         delay_min = f"{int(delay_sec / 60)} perc" if delay_sec is not None else "—"
@@ -273,8 +271,7 @@ async def dkvtroli(ctx):
             f"Vonal: {vonal}\n"
             f"Cél: {cel}\n"
             f"Környék: {megallo}\n"
-            f"Késés: {delay_min}\n"
-            f"Sebesség: {speed} km/h\n\n"
+            f"Késés: {delay_min}\n\n"
         )
 
         if len(description) + len(entry) > MAX_CHARS:
@@ -313,7 +310,7 @@ async def dkvbusz(ctx):
         v for v in vehicles
         if v.get("_type_key") == "bus"
         and v.get("_type_label")
-        and "MERCEDES" in v["_type_label"].upper()
+        and "MERCEDES" in v["_type_label"].upper() or (v.get("_type_label") and "Reform" in v["_type_label"].upper()) or (v.get("_type_label") and "ITK" in v["_type_label"].upper())
     ]
 
     if not mercedes:
@@ -333,7 +330,6 @@ async def dkvbusz(ctx):
         vonal = v.get("route_id", "—")
         cel = v.get("Destination", "Ismeretlen")
         megallo = v.get("StopAreaName", "Ismeretlen")
-        speed = v.get("speed_kmh", 0)
 
         delay_sec = v.get("delay_sec")
         delay_min = f"{int(delay_sec / 60)} perc" if delay_sec is not None else "—"
@@ -344,8 +340,7 @@ async def dkvbusz(ctx):
             f"Vonal: {vonal}\n"
             f"Cél: {cel}\n"
             f"Környék: {megallo}\n"
-            f"Késés: {delay_min}\n"
-            f"Sebesség: {speed} km/h\n\n"
+            f"Késés: {delay_min}\n\n"
         )
 
         if len(description) + len(entry) > MAX_CHARS:
@@ -431,7 +426,6 @@ async def dkvmercedes(ctx):
         vonal = v.get("route_id", "—")
         cel = v.get("Destination", "Ismeretlen")
         megallo = v.get("StopAreaName", "Ismeretlen")
-        speed = v.get("speed_kmh", 0)
 
         delay_sec = v.get("delay_sec")
         delay_min = f"{int(delay_sec / 60)} perc" if delay_sec is not None else "—"
@@ -442,8 +436,7 @@ async def dkvmercedes(ctx):
             f"Vonal: {vonal}\n"
             f"Cél: {cel}\n"
             f"Környék: {megallo}\n"
-            f"Késés: {delay_min}\n"
-            f"Sebesség: {speed} km/h\n\n"
+            f"Késés: {delay_min}\n\n"
         )
 
         if len(description) + len(entry) > MAX_CHARS:
@@ -464,6 +457,67 @@ async def dkvmercedes(ctx):
         ))
 
     # ───── 6. KÜLDÉS ─────
+    for e in embeds:
+        await ctx.send(embed=e)
+        
+@bot.command()
+async def dkvreform(ctx):
+    """A DKV ITK reform buszai"""
+    vehicles = await fetch_mav_vehicles()
+
+    # Mercedes szűrés
+    mercedes = [
+        v for v in vehicles
+        if (v.get("_type_label") and "Reform" in v["_type_label"].upper()) or (v.get("_type_label") and "ITK" in v["_type_label"].upper())
+    ]
+
+    if not mercedes:
+        await ctx.send("Nincsenek Reform buszok.")
+        return
+
+    # Rendezés rendszám szerint
+    mercedes.sort(key=lambda x: fix_plate(x.get("VehicleRegistrationNumber")))
+
+    MAX_CHARS = 4000
+    description = ""
+    embeds = []
+
+    for v in mercedes:
+        reg = fix_plate(v.get("VehicleRegistrationNumber"))
+        tipus = v.get("full_type_label", "Ismeretlen")
+        vonal = v.get("route_id", "—")
+        cel = v.get("Destination", "Ismeretlen")
+        megallo = v.get("StopAreaName", "Ismeretlen")
+
+        delay_sec = v.get("delay_sec")
+        delay_min = f"{int(delay_sec / 60)} perc" if delay_sec is not None else "—"
+
+        entry = (
+            f"**{reg}**\n"
+            f"{tipus}\n"
+            f"Vonal: {vonal}\n"
+            f"Cél: {cel}\n"
+            f"Környék: {megallo}\n"
+            f"Késés: {delay_min}\n\n"
+        )
+
+        if len(description) + len(entry) > MAX_CHARS:
+            embeds.append(discord.Embed(
+                title="🚍 Reform buszok",
+                description=description,
+                color=0x005B9F
+            ))
+            description = entry
+        else:
+            description += entry
+
+    if description:
+        embeds.append(discord.Embed(
+            title="🚍 Reform buszok",
+            description=description,
+            color=0x005B9F
+        ))
+
     for e in embeds:
         await ctx.send(embed=e)
         
@@ -499,7 +553,6 @@ async def dkvvillamos(ctx):
         vonal = v.get("route_id", "—")
         cel = v.get("Destination", "Ismeretlen")
         megallo = v.get("StopAreaName", "Ismeretlen")
-        speed = v.get("speed_kmh", 0)
 
         delay_sec = v.get("delay_sec")
         delay_min = f"{int(delay_sec / 60)} perc" if delay_sec is not None else "—"
@@ -510,8 +563,7 @@ async def dkvvillamos(ctx):
             f"Vonal: {vonal}\n"
             f"Cél: {cel}\n"
             f"Környék: {megallo}\n"
-            f"Késés: {delay_min}\n"
-            f"Sebesség: {speed} km/h\n\n"
+            f"Késés: {delay_min}\n\n"
         )
 
         if len(description) + len(entry) > MAX_CHARS:
@@ -562,7 +614,6 @@ async def dkvkcsv(ctx):
         vonal = v.get("route_id", "—")
         cel = v.get("Destination", "Ismeretlen")
         megallo = v.get("StopAreaName", "Ismeretlen")
-        speed = v.get("speed_kmh", 0)
 
         delay_sec = v.get("delay_sec")
         delay_min = f"{int(delay_sec / 60)} perc" if delay_sec is not None else "—"
@@ -573,8 +624,7 @@ async def dkvkcsv(ctx):
             f"Vonal: {vonal}\n"
             f"Cél: {cel}\n"
             f"Környék: {megallo}\n"
-            f"Késés: {delay_min}\n"
-            f"Sebesség: {speed} km/h\n\n"
+            f"Késés: {delay_min}\n\n"
         )
 
         if len(description) + len(entry) > MAX_CHARS:
@@ -625,7 +675,6 @@ async def dkvcaf(ctx):
         vonal = v.get("route_id", "—")
         cel = v.get("Destination", "Ismeretlen")
         megallo = v.get("StopAreaName", "Ismeretlen")
-        speed = v.get("speed_kmh", 0)
 
         delay_sec = v.get("delay_sec")
         delay_min = f"{int(delay_sec / 60)} perc" if delay_sec is not None else "—"
@@ -636,8 +685,7 @@ async def dkvcaf(ctx):
             f"Vonal: {vonal}\n"
             f"Cél: {cel}\n"
             f"Környék: {megallo}\n"
-            f"Késés: {delay_min}\n"
-            f"Sebesség: {speed} km/h\n\n"
+            f"Késés: {delay_min}\n\n"
         )
 
         if len(description) + len(entry) > MAX_CHARS:
@@ -742,16 +790,11 @@ async def dkvcaf(ctx):
 #     await ctx.send(f"🚊 **{vehicle} utolsó menete**\n```{last}```")
         
 @bot.command()
-async def dkvall(ctx, line: str):
-    """Kiírja az adott vonalon közlekedő összes járművet (lineCode alapján)."""
-
-    import aiohttp
-    import discord
+async def all(ctx, line: str):
+    """Kiírja az adott vonalon közlekedő összes járművet"""
 
     TRAM_LINES = {"1","2"}
-
     TROLLEY_LINES = {"3", "3A", "4", "5", "5A"}
-
     NIGHT_LINES = {"90Y","91A","91Y","92","93","94","971","972","973","974"}
 
     BUS_LINES = {
@@ -763,48 +806,48 @@ async def dkvall(ctx, line: str):
         "71","71A","72","72A","73","73A","125","125Y","146","J1"
     }
 
-    AP_LINES = {"Airport 1"}
-    STORE_LINE = {"Auchan 1"}
+    AP_LINES = {"AIRPORT1"}
+    STORE_LINE = {"AUCHAN1"}
 
     def normalize(x):
         return "".join(str(x or "").upper().split())
 
     line = normalize(line)
 
-    # ───── típus + szín meghatározás ─────
+    # ───── ALAP (vonal szerinti) ─────
     if line in TRAM_LINES:
         color = 0xe8ad15
         title_prefix = "🚊 Aktív járművek – Villamos"
+        base_type = "tram"
     elif line in TROLLEY_LINES:
         color = 0x6ab53f
         title_prefix = "🚎 Aktív járművek – Trolibusz"
+        base_type = "trolley"
     elif line in NIGHT_LINES:
         color = 0x2596be
         title_prefix = "🌙 Aktív járművek – Éjszakai"
+        base_type = "night"
     elif line in AP_LINES:
         color = 0x13d9e2
         title_prefix = "✈️ Aktív járművek – Airport"
+        base_type = "bus"
     elif line in STORE_LINE:
         color = 0xdb3d37
         title_prefix = "🛒 Aktív járművek – Store"
-    else:
+        base_type = "bus"
+    elif line in BUS_LINES:
         color = 0x005b9f
         title_prefix = "🚍 Aktív járművek – Busz"
+        base_type = "bus"
 
-    async with aiohttp.ClientSession() as session:
-        async with session.get(VEHICLES_API) as resp:
-            if resp.status != 200:
-                return await ctx.send(f"❌ API hiba: {resp.status}")
-
-            data = await resp.json()
-
-    vehicles = data.get("vehicles", [])
+    vehicles = await fetch_mav_vehicles()
+    vehicles = [fix_type_key(v) for v in vehicles]
 
     active = []
+    detected_types = set()
 
     for v in vehicles:
-        line_code = v.get("lineCode") or v.get("route_id") or v.get("TripShortName")
-        line_code = normalize(line_code)
+        line_code = normalize(v.get("lineCode") or v.get("route_id"))
 
         if line_code != line:
             continue
@@ -815,19 +858,47 @@ async def dkvall(ctx, line: str):
         if lat is None or lon is None:
             continue
 
+        t = v.get("_type_key")
+
+        if t == "tram":
+            detected_types.add("tram")
+        elif t == "troli":
+            detected_types.add("trolley")
+        elif t == "bus":
+            detected_types.add("bus")
+
         active.append({
-            "reg": v.get("VehicleRegistrationNumber", "Ismeretlen"),
+            "reg": fix_plate(v.get("VehicleRegistrationNumber")),
             "dest": v.get("Destination", "Ismeretlen"),
             "lat": lat,
             "lon": lon,
-            "speed": v.get("speed_kmh", "—"),
             "delay": v.get("delay_sec") or v.get("Delay"),
-            "type": v.get("_type_label", "Ismeretlen típus")
+            "type": v.get("_type_label", "Ismeretlen")
         })
 
     if not active:
         return await ctx.send(f"❗ Nincs aktív jármű a **{line}** vonalon.")
 
+    # ───── FELÜLÍRÁS HA ELTÉR ─────
+    if len(detected_types) == 1:
+        real_type = list(detected_types)[0]
+
+        if real_type != base_type:
+            if real_type == "tram":
+                color = 0xe8ad15
+                title_prefix = "🚊 Aktív járművek – Villamos"
+            elif real_type == "trolley":
+                color = 0x6ab53f
+                title_prefix = "🚎 Aktív járművek – Trolibusz"
+            elif real_type == "bus":
+                color = 0x005b9f
+                title_prefix = "🚍 Aktív járművek – Busz"
+
+    elif len(detected_types) > 1:
+        color = 0x666666
+        title_prefix = "🚦 Vegyes járművek"
+
+    # ───── EMBED ─────
     embed = discord.Embed(
         title=f"{title_prefix} {line}",
         color=color
@@ -841,13 +912,12 @@ async def dkvall(ctx, line: str):
             delay = "—"
 
         embed.add_field(
-            name=f"{v['reg']}",
+            name=v["reg"],
             value=(
                 f"Típus: {v['type']}\n"
                 f"Cél: {v['dest']}\n"
                 f"Késés: {delay}\n"
-                f"Sebesség: {v['speed']} km/h\n"
-                f"Pozíció: {v['lat']:.5f}, {v['lon']:.5f}"
+                f"Pozíció: {v['lat']:.5f}, {v['lon']:.5f}\n\n"
             ),
             inline=False
         )
