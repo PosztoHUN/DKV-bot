@@ -19,7 +19,7 @@ from google.transit import gtfs_realtime_pb2
 # BEÁLLÍTÁSOK
 # =======================
 
-TOKEN = "MTQ5MjE4NTgzNzU3MDM2MzM5Mw.GXyKCt.KKuqHtKsxlqSZystWGxImfO1WkJVBzfWfzaD7Y"
+TOKEN = os.getenv("TOKEN")
 
 VEHICLES_API = "https://holajarmu.hu/debrecen/api/vehicles"
 REQ_TIMEOUT = aiohttp.ClientTimeout(total=25)
