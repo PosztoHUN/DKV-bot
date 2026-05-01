@@ -245,7 +245,7 @@ async def dkvtroli(ctx):
     ]
 
     if not mercedes:
-        await ctx.send("Nincsenek Mercedes buszok.")
+        await ctx.send("Nincsenek trolibuszok.")
         return
 
     # Rendezés rendszám szerint
@@ -314,7 +314,7 @@ async def dkvbusz(ctx):
     ]
 
     if not mercedes:
-        await ctx.send("Nincsenek Mercedes buszok.")
+        await ctx.send("Nincsenek buszok.")
         return
 
     # Rendezés rendszám szerint
